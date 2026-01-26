@@ -58,6 +58,7 @@ jobs:
 
       - name: Publish dependency diff to job summary
         run: |
+          touch $GITHUB_STEP_SUMMARY
           echo "## 📦 Ontology dependency diff" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "```diff" >> $GITHUB_STEP_SUMMARY
