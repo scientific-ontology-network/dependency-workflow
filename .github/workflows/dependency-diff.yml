@@ -1,0 +1,75 @@
+name: Ontology dependency diff
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  dependency-diff:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed to access base commit
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install strix-roost
+        run: cargo install strix-roost
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      # -------------------------
+      # Run on BASE (old ontology)
+      # -------------------------
+      - name: Checkout base commit
+        run: |
+          git checkout ${{ github.event.pull_request.base.sha }}
+
+      - name: Compute dependencies (old)
+        run: |
+          strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-old.json
+          # normalize for stable diffs
+          jq -S . deps-old.json > deps-old.sorted.json
+
+      # -------------------------
+      # Run on PR (new ontology)
+      # -------------------------
+      - name: Checkout PR commit
+        run: |
+          git checkout ${{ github.event.pull_request.head.sha }}
+
+      - name: Compute dependencies (new)
+        run: |
+          strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-new.json
+          jq -S . deps-new.json > deps-new.sorted.json
+
+      # -------------------------
+      # Diff
+      # -------------------------
+      - name: Generate diff
+        id: diff
+        run: |
+          diff -u deps-old.sorted.json deps-new.sorted.json > deps.diff || true
+
+          echo "DIFF<<EOF" >> $GITHUB_OUTPUT
+          cat deps.diff >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # -------------------------
+      # Comment on PR
+      # -------------------------
+      - name: Comment diff on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Ontology dependency diff
+
+            ```diff
+            ${{ steps.diff.outputs.DIFF }}
+            ```
