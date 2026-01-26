@@ -1,8 +1,12 @@
 name: Ontology dependency diff
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   dependency-diff:
@@ -33,7 +37,6 @@ jobs:
       - name: Compute dependencies (old)
         run: |
           strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-old.json
-          # normalize for stable diffs
           jq -S . deps-old.json > deps-old.sorted.json
 
       # -------------------------
