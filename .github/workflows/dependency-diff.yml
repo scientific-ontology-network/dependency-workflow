@@ -56,10 +56,10 @@ jobs:
       # -------------------------
       - name: Generate diff
         run: |
-          echo "$(head -n 10 deps-old.sorted.json)"  >> $GITHUB_OUTPUT
-          echo "$(head -n 10 deps-new.sorted.json)" >> $GITHUB_OUTPUT
+          echo "Old: $(head -n 10 deps-old.sorted.json)"  >> $GITHUB_OUTPUT
+          echo "New: $(head -n 10 deps-new.sorted.json)" >> $GITHUB_OUTPUT
           diff -u deps-old.sorted.json deps-new.sorted.json > deps.diff || true
-          echo "$(head -n 10 deps.diff)" >> $GITHUB_OUTPUT
+          echo "Diff: $(head -n 10 deps.diff)" >> $GITHUB_OUTPUT
 
       - name: Publish dependency diff to job summary
         run: |
