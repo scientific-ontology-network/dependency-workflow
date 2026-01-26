@@ -57,7 +57,7 @@ jobs:
       - name: Generate diff
         run: |
           diff -u deps-old.sorted.json deps-new.sorted.json > deps.diff || true
-
+          echo `head -n 10 filename`
 
       - name: Publish dependency diff to job summary
         run: |
