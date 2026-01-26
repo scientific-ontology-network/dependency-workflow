@@ -52,24 +52,25 @@ jobs:
       # Diff
       # -------------------------
       - name: Generate diff
-        id: diff
         run: |
           diff -u deps-old.sorted.json deps-new.sorted.json > deps.diff || true
 
-          echo "DIFF<<EOF" >> $GITHUB_OUTPUT
-          cat deps.diff >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
-      # -------------------------
-      # Comment on PR
-      # -------------------------
-      - name: Comment diff on PR
+      - name: Publish dependency diff to job summary
+        run: |
+          echo "## 📦 Ontology dependency diff" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "```diff" >> $GITHUB_STEP_SUMMARY
+          cat deps.diff >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment link to full diff
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            ## Ontology dependency diff
+            ## 📦 Ontology dependency diff
 
-            ```diff
-            ${{ steps.diff.outputs.DIFF }}
-            ```
+            The full dependency diff is available in the workflow run summary:
+
+            [View full diff](https://github.com/${{ github.repository }}/runs/${{ github.run_id }}?check_suite_focus=true)
