@@ -18,14 +18,18 @@ jobs:
         with:
           fetch-depth: 0  # needed to access base commit
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install strix-roost
-        run: cargo install strix-roost
-
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Install strix-roost
+        run: | 
+          LATEST_TAG=$(curl -s https://api.github.com/repos/scientific-ontology-network/strix-roost/releases/latest | jq -r .tag_name)
+          echo "Latest strix-roost release: $LATEST_TAG"
+          curl -L \
+            "https://github.com/scientific-ontology-network/strix-roost/releases/download/v0.1.1/strix-roost-linux-gnu.tar.gz" \
+            | tar xz
+          chmod +x strix-roost
+          sudo mv strix-roost /usr/local/bin/
 
       # -------------------------
       # Run on BASE (old ontology)
@@ -56,8 +60,10 @@ jobs:
       # -------------------------
       - name: Generate diff
         run: |
+          echo "Old: $(head -n 10 deps-old.sorted.json)"
+          echo "New: $(head -n 10 deps-new.sorted.json)"
           diff -u deps-old.sorted.json deps-new.sorted.json > deps.diff || true
-
+          echo "Diff: $(head -n 10 deps.diff)"
 
       - name: Publish dependency diff to job summary
         run: |
