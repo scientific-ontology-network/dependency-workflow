@@ -68,11 +68,11 @@ jobs:
       - name: Publish dependency diff to job summary
         run: |
           touch $GITHUB_STEP_SUMMARY
-          echo "## 📦 Ontology dependency diff" >> $GITHUB_STEP_SUMMARY
+          echo "## Ontology dependency diff" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "```diff" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`diff" >> $GITHUB_STEP_SUMMARY
           cat deps.diff >> $GITHUB_STEP_SUMMARY
-          echo "```" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Comment link to full diff
         uses: peter-evans/create-or-update-comment@v4
