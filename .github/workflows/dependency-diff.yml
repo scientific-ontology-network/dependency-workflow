@@ -41,7 +41,7 @@ jobs:
       - name: Compute dependencies (old)
         run: |
           strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-old.json
-          jq -r 'map_values(keys)' > deps-old-keys.json
+          jq -r 'map_values(keys)' deps-old.json > deps-old-keys.json
           jq -S . deps-old-keys.json > deps-old.sorted.json
 
       # -------------------------
@@ -54,7 +54,7 @@ jobs:
       - name: Compute dependencies (new)
         run: |
           strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-new.json
-          jq -r 'map_values(keys)' > deps-new-keys.json
+          jq -r 'map_values(keys)' deps-new.json > deps-new-keys.json
           jq -S . deps-new-keys.json > deps-new.sorted.json
 
       # -------------------------
