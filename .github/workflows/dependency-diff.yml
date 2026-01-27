@@ -41,7 +41,8 @@ jobs:
       - name: Compute dependencies (old)
         run: |
           strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-old.json
-          jq -S . deps-old.json > deps-old.sorted.json
+          jq -r 'map_values(keys)' > deps-old-keys.json
+          jq -S . deps-old-keys.json > deps-old.sorted.json
 
       # -------------------------
       # Run on PR (new ontology)
@@ -53,17 +54,15 @@ jobs:
       - name: Compute dependencies (new)
         run: |
           strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-new.json
-          jq -S . deps-new.json > deps-new.sorted.json
+          jq -r 'map_values(keys)' > deps-new-keys.json
+          jq -S . deps-new-keys.json > deps-new.sorted.json
 
       # -------------------------
       # Diff
       # -------------------------
       - name: Generate diff
         run: |
-          echo "Old: $(head -n 10 deps-old.sorted.json)"
-          echo "New: $(head -n 10 deps-new.sorted.json)"
           diff -u deps-old.sorted.json deps-new.sorted.json > deps.diff || true
-          echo "Diff: $(head -n 10 deps.diff)"
 
       - name: Publish dependency diff to job summary
         run: |
