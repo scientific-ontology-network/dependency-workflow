@@ -49,7 +49,7 @@ jobs:
           strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-old.json
           jq -r 'map_values(keys)' deps-old.json > deps-old-keys.json
 
-      - name: Replace with labels
+      - name: Replace with labels (old)
         run: |
           jq --slurpfile f anno.json '
             def label_for($k):
@@ -97,11 +97,9 @@ jobs:
           strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-new.json
           jq -r 'map_values(keys)' deps-new.json > deps-new-keys.json
 
-      - name: Sort dependencies (new)
-        run: |
-          jq -S . deps-new-labeled.json > deps-new.sorted.json
+     
 
-      - name: Replace with labels
+      - name: Replace with labels (new)
         run: |
           jq --slurpfile f anno.json '
             def label_for($k):
@@ -132,6 +130,10 @@ jobs:
 
             relabel
           ' deps-new-keys.json > deps-new-labeled.json
+
+      - name: Sort dependencies (new)
+        run: |
+          jq -S . deps-new-labeled.json > deps-new.sorted.json
 
 
       # -------------------------
