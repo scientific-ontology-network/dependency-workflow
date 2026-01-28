@@ -84,7 +84,7 @@ jobs:
                 ) // $k;
 
             map_values(map(label_for(.)))
-          ' deps.json
+          ' deps.diff
 
       - name: Publish dependency diff to job summary
         run: |
