@@ -57,12 +57,34 @@ jobs:
           jq -r 'map_values(keys)' deps-new.json > deps-new-keys.json
           jq -S . deps-new-keys.json > deps-new.sorted.json
 
+      - name: Compute annotations
+        run: |
+          strix-roost --in-path pizza.owl annotations --out-path anno.json
+
       # -------------------------
       # Diff
       # -------------------------
       - name: Generate diff
         run: |
           diff -u deps-old.sorted.json deps-new.sorted.json > deps.diff || true
+
+      - name: Replace with labels
+        run: |
+          jq --slurpfile map anno.json '
+            def label_for($k):
+              ($map[0][$k].labels // {} | to_entries) as $labels
+              | (
+                  $labels[]
+                  | select(.value.type == "language" and .value.lang == "en")
+                  | .value.literal
+                ) // (
+                  $labels[]
+                  | select(.value.type == "simple")
+                  | .value.literal
+                ) // $k;
+
+            map_values(map(label_for(.)))
+          ' deps.json
 
       - name: Publish dependency diff to job summary
         run: |
