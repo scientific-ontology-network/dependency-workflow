@@ -140,17 +140,6 @@ jobs:
           }
           ' > diff.json
       
-      - name: Prettify Added
-        run: |
-          jq -r '
-          .left_but_not_right
-          | to_entries[]
-          | "## Added\n<details>\n<summary>\(.key)</summary>\n" +
-            (.value | map("* \(.)") | join("\n")) +
-            "\n</details>\n"
-          ' diff.json > 
-
-
       - name: Publish dependency diff to job summary
         run: |
           touch $GITHUB_STEP_SUMMARY
