@@ -146,16 +146,16 @@ jobs:
           jq -r '
           .left_but_not_right
           | to_entries[]
-          | "## Removed\n<details>\n<summary>\(.key)</summary>\n" +
-            (.value | map("* \(.)") | join("\n")) +
-            "\n</details>\n"
+          | "## Removed\n<details>\n<summary>\(.key)</summary>\n\n<ul>" +
+            (.value | map("<li> \(.)</li>") | join("\n")) +
+            "\n</ul></details>\n"
           ' diff.json >> $GITHUB_STEP_SUMMARY
           jq -r '
           .right_but_not_left
           | to_entries[]
-          | "## Added\n<details>\n<summary>\(.key)</summary>\n" +
-            (.value | map("* \(.)") | join("\n")) +
-            "\n</details>\n"
+          | "## Added\n<details>\n<summary>\(.key)</summary>\n\n<ul>" +
+            (.value | map("<li>\(.)</li>") | join("\n")) +
+            "\n</ul></details>\n"
           ' diff.json >>  $GITHUB_STEP_SUMMARY
 
       - name: Comment link to full diff
