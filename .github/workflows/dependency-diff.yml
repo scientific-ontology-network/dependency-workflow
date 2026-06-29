@@ -26,7 +26,7 @@ jobs:
           LATEST_TAG=$(curl -s https://api.github.com/repos/scientific-ontology-network/strix-roost/releases/latest | jq -r .tag_name)
           echo "Latest strix-roost release: $LATEST_TAG"
           curl -L \
-            "https://github.com/scientific-ontology-network/strix-roost/releases/download/v0.1.1/strix-roost-linux-gnu.tar.gz" \
+            "https://github.com/scientific-ontology-network/strix-roost/releases/download/v0.1.2/strix-roost-linux-gnu.tar.gz" \
             | tar xz
           chmod +x strix-roost
           sudo mv strix-roost /usr/local/bin/
@@ -37,8 +37,6 @@ jobs:
       - name: Checkout base commit
         run: |
           git checkout ${{ github.event.pull_request.base.sha }}
-
-
       
       - name: Compute annotations
         run: |
@@ -49,10 +47,10 @@ jobs:
           strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-old.json
           jq -r 'map_values(keys)' deps-old.json > deps-old-keys.json
 
-      - name: Replace with labels (old)
+      - name: Generate jquery labeler
         run: |
-          jq --slurpfile f anno.json '
-            def label_for($k):
+          cat << EOF > labeler.jq
+          def label_for($k): 
               ($f[0][$k].labels? // {} | to_entries) as $labels
               | (
                   $labels[]
@@ -78,8 +76,12 @@ jobs:
                 .
               end;
 
-            relabel
-          ' deps-old-keys.json > deps-old-labeled.json
+          relabel
+          EOF
+
+      - name: Replace with labels (old)
+        run: |
+          jq --slurpfile f anno.json -f labeler.jq deps-old-keys.json > deps-old-labeled.json
 
       - name: Sort dependencies (old)
         run: |
@@ -101,35 +103,7 @@ jobs:
 
       - name: Replace with labels (new)
         run: |
-          jq --slurpfile f anno.json '
-            def label_for($k):
-              ($f[0][$k].labels? // {} | to_entries) as $labels
-              | (
-                  $labels[]
-                  | select(.value.type == "language" and .value.lang == "en")
-                  | .value.literal
-                ) // (
-                  $labels[]
-                  | select(.value.type == "simple")
-                  | .value.literal
-                ) // $k;
-
-            def relabel:
-              if type == "object" then
-                with_entries(
-                  .key |= label_for(.)
-                  | .value |= relabel
-                )
-              elif type == "array" then
-                map(relabel)
-              elif type == "string" then
-                label_for(.)
-              else
-                .
-              end;
-
-            relabel
-          ' deps-new-keys.json > deps-new-labeled.json
+          jq --slurpfile f anno.json -f labeler.jq deps-new-keys.json > deps-new-labeled.json
 
       - name: Sort dependencies (new)
         run: |
@@ -160,5 +134,6 @@ jobs:
             ## 📦 Ontology dependency diff
 
             The full dependency diff is available in the workflow run summary:
+              
 
-            [View full diff](https://github.com/${{ github.repository }}/runs/${{ github.run_id }}?check_suite_focus=true)
+            [View full diff](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ github.job }})
