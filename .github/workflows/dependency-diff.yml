@@ -50,31 +50,31 @@ jobs:
       - name: Generate jquery labeler
         run: |
           cat << EOF > labeler.jq
-          def label_for($k): 
-              ($f[0][$k].labels? // {} | to_entries) as $labels
+          def label_for(\$k): 
+              (\$f[0][\$k].labels? // {} | to_entries) as \$labels
               | (
-                  $labels[]
+                  \$labels[]
                   | select(.value.type == "language" and .value.lang == "en")
                   | .value.literal
                 ) // (
-                  $labels[]
+                  \$labels[]
                   | select(.value.type == "simple")
                   | .value.literal
-                ) // $k;
+                ) // \$k;
 
-            def relabel:
-              if type == "object" then
-                with_entries(
-                  .key |= label_for(.)
-                  | .value |= relabel
-                )
-              elif type == "array" then
-                map(relabel)
-              elif type == "string" then
-                label_for(.)
-              else
-                .
-              end;
+          def relabel:
+            if type == "object" then
+              with_entries(
+                .key |= label_for(.)
+                | .value |= relabel
+              )
+            elif type == "array" then
+              map(relabel)
+            elif type == "string" then
+              label_for(.)
+            else
+              .
+            end;
 
           relabel
           EOF
