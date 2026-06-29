@@ -115,16 +115,59 @@ jobs:
       # -------------------------
       - name: Generate diff
         run: |
-          diff -u deps-old.sorted.json deps-new.sorted.json > deps.diff || true
+          jq -n --slurpfile a deps-old-labeled.json --slurpfile b deps-new-labeled.json '
+          def set: unique;
+
+          ((($a[0] | keys) + ($b[0] | keys)) | unique) as $keys
+          | {
+            left_but_not_right: (
+              reduce $keys[] as $k ({}; 
+                ($a[0][$k] // []) as $av
+                | ($b[0][$k] // []) as $bv
+                | (($av | set) - ($bv | set)) as $diff
+                | if ($diff | length > 0) then .[$k] = $diff else . end
+              )
+            ),
+
+            right_but_not_left: (
+              reduce $keys[] as $k ({}; 
+                ($b[0][$k] // []) as $bv
+                | ($a[0][$k] // []) as $av
+                | (($bv | set) - ($av | set)) as $diff
+                | if ($diff | length > 0) then .[$k] = $diff else . end
+              )
+            )
+          }
+          ' > diff.json
+      
+      - name: Prettify Added
+        run: |
+          jq -r '
+          .left_but_not_right
+          | to_entries[]
+          | "## Added\n<details>\n<summary>\(.key)</summary>\n" +
+            (.value | map("* \(.)") | join("\n")) +
+            "\n</details>\n"
+          ' diff.json > 
+
 
       - name: Publish dependency diff to job summary
         run: |
           touch $GITHUB_STEP_SUMMARY
-          echo "## Ontology dependency diff" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`diff" >> $GITHUB_STEP_SUMMARY
-          cat deps.diff >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          jq -r '
+          .left_but_not_right
+          | to_entries[]
+          | "## Removed\n<details>\n<summary>\(.key)</summary>\n" +
+            (.value | map("* \(.)") | join("\n")) +
+            "\n</details>\n"
+          ' diff.json >> $GITHUB_STEP_SUMMARY
+          jq -r '
+          .right_but_not_left
+          | to_entries[]
+          | "## Added\n<details>\n<summary>\(.key)</summary>\n" +
+            (.value | map("* \(.)") | join("\n")) +
+            "\n</details>\n"
+          ' diff.json >>  $GITHUB_STEP_SUMMARY
 
       - name: Comment link to full diff
         uses: peter-evans/create-or-update-comment@v4
@@ -134,6 +177,5 @@ jobs:
             ## 📦 Ontology dependency diff
 
             The full dependency diff is available in the workflow run summary:
-              
 
             [View full diff](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
