@@ -147,7 +147,7 @@ jobs:
           .left_but_not_right
           | to_entries[]
           | "## Removed\n<details>\n<summary>\(.key)</summary>\n\n<ul>" +
-            (.value | map("<li> \(.)</li>") | join("\n")) +
+            (.value | map("<li>\(.)</li>") | join("\n")) +
             "\n</ul></details>\n"
           ' diff.json >> $GITHUB_STEP_SUMMARY
           jq -r '
