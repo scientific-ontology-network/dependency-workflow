@@ -136,4 +136,4 @@ jobs:
             The full dependency diff is available in the workflow run summary:
               
 
-            [View full diff](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs/${{ github.job }})
+            [View full diff](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
