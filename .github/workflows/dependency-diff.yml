@@ -44,7 +44,7 @@ jobs:
       
       - name: Compute dependencies (old)
         run: |
-          strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-old.json
+          strix-roost --in-path pizza.owl dependency --cause-limit 0 --method "empty" --out-path deps-old.json
           jq -r 'map_values(keys)' deps-old.json > deps-old-keys.json
 
       - name: Generate jquery labeler
@@ -96,7 +96,7 @@ jobs:
 
       - name: Compute dependencies (new)
         run: |
-          strix-roost --in-path pizza.owl dependency --method "empty" --out-path deps-new.json
+          strix-roost --in-path pizza.owl dependency --method "empty" --cause-limit 0 --out-path deps-new.json
           jq -r 'map_values(keys)' deps-new.json > deps-new-keys.json
 
      
